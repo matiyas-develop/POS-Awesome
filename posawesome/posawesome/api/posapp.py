@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import json
 import frappe
+from datetime import datetime
 from frappe.utils import nowdate, flt, cstr, getdate
 from frappe import _
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
@@ -432,6 +433,7 @@ def get_customer_names(pos_profile):
             ),
             as_dict=1,
         )
+        
         return customers
 
     if _pos_profile.get("posa_use_server_cache"):
@@ -439,16 +441,40 @@ def get_customer_names(pos_profile):
     else:
         return _get_customer_names(pos_profile)
 
-
 @frappe.whitelist()
-def get_sales_person_names():
-    sales_persons = frappe.get_list(
-        "Sales Person",
-        filters={"enabled": 1},
-        fields=["name", "sales_person_name"],
-        limit_page_length=100000,
-    )
-    return sales_persons
+def get_membership_card_names(pos_profile):
+    _pos_profile = json.loads(pos_profile)
+
+    ttl = _pos_profile.get("posa_server_cache_duration")
+    if ttl:
+        ttl = int(ttl) * 60
+
+    @redis_cache(ttl=ttl or 1800)
+    def __get_membership_card_names(pos_profile):
+        return _get_membership_card_names(pos_profile)
+
+    def _get_membership_card_names(pos_profile):
+        pos_profile = json.loads(pos_profile)
+        condition = ""
+        
+        # Add any conditions specific to membership cards
+        membershipcard = frappe.db.sql(
+            """
+            SELECT name,company
+            FROM `tabMemberShip Card`
+            ORDER BY name
+            """.format(
+                condition
+            ),
+            as_dict=1,
+        )
+        return membershipcard
+        
+    if _pos_profile.get("posa_use_server_cache"):
+        return __get_membership_card_names(pos_profile)
+    else:
+        return _get_membership_card_names(pos_profile)
+
 
 
 def add_taxes_from_tax_template(item, parent_doc):
@@ -493,7 +519,8 @@ def update_invoice_from_order(data):
 
 
 @frappe.whitelist()
-def update_invoice(data):
+def update_invoice(data,membershipcard):
+    frappe.msgprint(membershipcard)
     data = json.loads(data)
     if data.get("name"):
         invoice_doc = frappe.get_doc("Sales Invoice", data.get("name"))
@@ -552,11 +579,12 @@ def update_invoice(data):
 
 
 @frappe.whitelist()
-def submit_invoice(invoice, data):
+def submit_invoice(invoice, data,membershipcard):
     data = json.loads(data)
     invoice = json.loads(invoice)
     invoice_doc = frappe.get_doc("Sales Invoice", invoice.get("name"))
     invoice_doc.update(invoice)
+    invoice_doc.membership_card = membershipcard
     if invoice.get("posa_delivery_date"):
         invoice_doc.update_stock = 0
     mop_cash_list = [
@@ -1033,6 +1061,34 @@ def get_stock_availability(item_code, warehouse):
     )
     return actual_qty
 
+
+
+
+
+
+
+@frappe.whitelist()
+def create_membership_card(valid_from, valid_upto, pos_profile_doc,max_use,customer,description, method="create"):
+    pos_profile = json.loads(pos_profile_doc)
+    
+    # Convert date format from 'DD-MM-YYYY' to 'YYYY-MM-DD'
+    valid_from = datetime.strptime(valid_from, '%d-%m-%Y').strftime('%Y-%m-%d')
+    valid_upto = datetime.strptime(valid_upto, '%d-%m-%Y').strftime('%Y-%m-%d')
+
+    if method == "create":
+        membership_card = frappe.get_doc(
+            {
+                "doctype": "MemberShip Card",
+                "valid_from": valid_from,
+                "valid_upto": valid_upto,
+                "max_use":max_use,
+                "description":description,
+                "customer":customer,
+
+            }
+        )
+        membership_card.save()
+        return membership_card
 
 @frappe.whitelist()
 def create_customer(

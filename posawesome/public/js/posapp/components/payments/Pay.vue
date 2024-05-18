@@ -663,6 +663,7 @@ export default {
     },
     submit() {
       const customer = this.customer_name;
+      const membership = this.membershipcard;
       const vm = this;
       if (!customer) {
         frappe.throw(__("Please select a customer"));
@@ -690,6 +691,7 @@ export default {
 
       const payload = {};
       payload.customer = customer;
+      payload.membership_card = membership;
       payload.company = this.company;
       payload.currency = this.pos_profile.currency;
       payload.pos_opening_shift_name = this.pos_opening_shift.name;
