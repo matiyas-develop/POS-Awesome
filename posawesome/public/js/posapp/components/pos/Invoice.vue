@@ -1126,6 +1126,7 @@ export default {
       if (!data.name && !data.is_return) {
         this.items = [];
         this.customer = this.pos_profile.customer;
+        this.membership_card = this.membershipcard
         this.invoice_doc = "";
         this.discount_amount = 0;
         this.additional_discount_percentage = 0;
@@ -1234,6 +1235,7 @@ export default {
       }
       doc.doctype = "Sales Invoice";
       doc.is_pos = 1;
+      doc.membership_card = this.membershipcard;
       doc.ignore_pricing_rule = 1;
       doc.company = doc.company || this.pos_profile.company;
       doc.pos_profile = doc.pos_profile || this.pos_profile.name;
@@ -1403,6 +1405,7 @@ export default {
         method: "posawesome.posawesome.api.posapp.update_invoice",
         args: {
           data: doc,
+          membershipcard:vm.membershipcard
         },
         async: false,
         callback: function (r) {
@@ -1459,6 +1462,7 @@ export default {
         });
         return;
       }
+      
       if (!this.items.length) {
         evntBus.$emit("show_mesage", {
           text: __(`There is no Items !`),
@@ -1749,7 +1753,9 @@ export default {
           item: {
             item_code: item.item_code,
             customer: this.customer,
+            
             doctype: "Sales Invoice",
+            membership_card: this.membershipcard,
             name: "New Sales Invoice 1",
             company: this.pos_profile.company,
             conversion_rate: 1,
@@ -2984,6 +2990,7 @@ export default {
     customer() {
       this.close_payments();
       evntBus.$emit("set_customer", this.customer);
+      evntBus.$emit("set_membershipcard", this.membershipcard);
       this.fetch_customer_details();
       this.set_delivery_charges();
     },

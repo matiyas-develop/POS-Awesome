@@ -885,6 +885,7 @@ export default {
         args: {
           data: data,
           invoice: this.invoice_doc,
+          membershipcard:this.membershipcard,
         },
         async: true,
         callback: function (r) {
@@ -1070,21 +1071,7 @@ export default {
           localStorage.getItem("sales_persons_storage")
         );
       }
-      frappe.call({
-        method: "posawesome.posawesome.api.posapp.get_sales_person_names",
-        callback: function (r) {
-          if (r.message) {
-            vm.sales_persons = r.message;
-            if (vm.pos_profile.posa_local_storage) {
-              localStorage.setItem("sales_persons_storage", "");
-              localStorage.setItem(
-                "sales_persons_storage",
-                JSON.stringify(r.message)
-              );
-            }
-          }
-        },
-      });
+      
     },
     salesPersonFilter(item, queryText, itemText) {
       const textOne = item.sales_person_name

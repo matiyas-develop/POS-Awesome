@@ -235,6 +235,23 @@ export default {
       }
       this.setActiveGiftCoupons();
     });
+    evntBus.$on('update_membershipcard', (membershipcard) => {
+      if (this.membershipcard != membershipcard) {
+        const to_remove = [];
+        this.posa_coupons.forEach((el) => {
+          if (el.type == 'Promotional') {
+            el.membershipcard = membershipcard;
+          } else {
+            to_remove.push(el.coupon);
+          }
+        });
+        this.membershipcard = membershipcard;
+        if (to_remove.length) {
+          this.removeCoupon(to_remove);
+        }
+      }
+      this.setActiveGiftCoupons();
+    });
     evntBus.$on('update_pos_coupons', (data) => {
       this.updatePosCoupons(data);
     });
