@@ -4,6 +4,7 @@
       id="customer-autocomplete"
       dense
       clearable
+      color="primary"
       auto-select-first
       outlined
       :label="frappe._('Customer')"
@@ -21,25 +22,35 @@
       prepend-inner-icon="mdi-account-edit"
       @click:prepend-inner="edit_customer"
     >
-      <template v-slot:item="data">
-        <v-list-item-content>
-          <v-list-item-title
-            class="primary--text subtitle-1"
-            v-html="data.item.membershipcard"
-          ></v-list-item-title>
-          <v-list-item-subtitle
-            v-if="data.item.membershipcard != data.item.name"
-            v-html="`ID: ${data.item.name}`"
-          ></v-list-item-subtitle>
-          <v-list-item-subtitle
-            v-if="data.item.valid_from"
-            v-html="`Valid From: ${data.item.valid_from}`"
-          ></v-list-item-subtitle>
-          <v-list-item-subtitle
-            v-if="data.item.valid_from"
-            v-html="` Valid Upto : ${data.item.valid_upto}`"
-          ></v-list-item-subtitle>
-        </v-list-item-content>
+       <template v-slot:item="data">
+        <template>
+          <v-list-item-content>
+            <v-list-item-title
+              class="primary--text subtitle-1"
+              v-html="data.item.customer_name"
+            ></v-list-item-title>
+            <v-list-item-subtitle
+              v-if="data.item.customer_name != data.item.name"
+              v-html="`ID: ${data.item.name}`"
+            ></v-list-item-subtitle>
+            <v-list-item-subtitle
+              v-if="data.item.tax_id"
+              v-html="`TAX ID: ${data.item.tax_id}`"
+            ></v-list-item-subtitle>
+            <v-list-item-subtitle
+              v-if="data.item.email_id"
+              v-html="`Email: ${data.item.email_id}`"
+            ></v-list-item-subtitle>
+            <v-list-item-subtitle
+              v-if="data.item.mobile_no"
+              v-html="`Mobile No: ${data.item.mobile_no}`"
+            ></v-list-item-subtitle>
+            <v-list-item-subtitle
+              v-if="data.item.primary_address"
+              v-html="`Primary Address: ${data.item.primary_address}`"
+            ></v-list-item-subtitle>
+          </v-list-item-content>
+        </template>
       </template>
     </v-autocomplete>
 
@@ -89,7 +100,7 @@
             v-if="data.item.description"
             v-html="`Description: ${data.item.description}`"
           ></v-list-item-subtitle>
-          v-list-item-subtitle
+          <v-list-item-subtitle
             v-if="data.item.max_use"
             v-html="` Max Use : ${data.item.max_use}`"
           ></v-list-item-subtitle>
@@ -232,6 +243,12 @@ export default {
       evntBus.$on('add_customer_to_list', (customer) => {
         this.customers.push(customer);
       });
+      evntBus.$on('add_member_to_list', (membershipcard) => {
+        this.membershipcards.push(membershipcard);
+      });
+      evntBus.$on('add_customer_to_list_membership', (customer) => {
+        this.customers.push(customer);
+      });
       evntBus.$on('set_customer_readonly', (value) => {
         this.readonly = value;
       });
@@ -250,7 +267,7 @@ export default {
       evntBus.$emit('update_customer', this.customer);
     },
      membershipcard() {
-      evntBus.$emit('membership', this.membershipcard);
+      evntBus.$emit('update_membershipcard', this.membershipcard);
     },
   },
   
