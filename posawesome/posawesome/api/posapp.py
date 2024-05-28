@@ -441,6 +441,29 @@ def get_customer_names(pos_profile):
     else:
         return _get_customer_names(pos_profile)
 
+
+@frappe.whitelist()
+def get_customer_names_list(pos_profile=None):
+    if not pos_profile:
+        return []
+
+    pos_profile = json.loads(pos_profile)
+    condition = get_customer_group_condition(pos_profile)
+    
+    customers = frappe.db.sql(
+        """
+        SELECT name, mobile_no, email_id, tax_id, customer_name, primary_address
+        FROM `tabCustomer`
+        WHERE {0}
+        ORDER by name
+        """.format(
+            condition
+        ),
+        as_dict=1,
+    )
+    return customers
+
+
 @frappe.whitelist()
 def get_membership_card_names(pos_profile):
     _pos_profile = json.loads(pos_profile)
@@ -519,8 +542,7 @@ def update_invoice_from_order(data):
 
 
 @frappe.whitelist()
-def update_invoice(data,membershipcard):
-    frappe.msgprint(membershipcard)
+def update_invoice(data):
     data = json.loads(data)
     if data.get("name"):
         invoice_doc = frappe.get_doc("Sales Invoice", data.get("name"))
@@ -579,12 +601,11 @@ def update_invoice(data,membershipcard):
 
 
 @frappe.whitelist()
-def submit_invoice(invoice, data,membershipcard):
+def submit_invoice(invoice, data):
     data = json.loads(data)
     invoice = json.loads(invoice)
     invoice_doc = frappe.get_doc("Sales Invoice", invoice.get("name"))
     invoice_doc.update(invoice)
-    invoice_doc.membership_card = membershipcard
     if invoice.get("posa_delivery_date"):
         invoice_doc.update_stock = 0
     mop_cash_list = [
@@ -1004,6 +1025,7 @@ def get_items_details(pos_profile, items_data):
         return _get_items_details(pos_profile, items_data)
 
 
+
 @frappe.whitelist()
 def get_item_detail(item, doc=None, warehouse=None, price_list=None):
     item = json.loads(item)
@@ -1063,17 +1085,25 @@ def get_stock_availability(item_code, warehouse):
 
 
 
-
-
+@frappe.whitelist()
+def get_member_item():
+    try:
+        item = frappe.get_doc("Item", "Member")
+        return {
+            "item_code": item.item_code,
+        }
+    except frappe.DoesNotExistError:
+        frappe.throw(_("Item with code 'Member' does not exist"))
+    
 
 
 @frappe.whitelist()
-def create_membership_card(valid_from, valid_upto, pos_profile_doc,max_use,customer,description, method="create"):
+def create_membership_card(valid_from, valid_upto, pos_profile_doc, description,customer, method="create"):
     pos_profile = json.loads(pos_profile_doc)
     
-    # Convert date format from 'DD-MM-YYYY' to 'YYYY-MM-DD'
-    valid_from = datetime.strptime(valid_from, '%d-%m-%Y').strftime('%Y-%m-%d')
-    valid_upto = datetime.strptime(valid_upto, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # No need to convert date format if it's already in 'YYYY-MM-DD'
+    # valid_from = datetime.strptime(valid_from, '%d-%m-%Y').strftime('%Y-%m-%d')
+    # valid_upto = datetime.strptime(valid_upto, '%d-%m-%Y').strftime('%Y-%m-%d')
 
     if method == "create":
         membership_card = frappe.get_doc(
@@ -1081,14 +1111,13 @@ def create_membership_card(valid_from, valid_upto, pos_profile_doc,max_use,custo
                 "doctype": "MemberShip Card",
                 "valid_from": valid_from,
                 "valid_upto": valid_upto,
-                "max_use":max_use,
+                "customer": customer,
                 "description":description,
-                "customer":customer,
-
             }
         )
         membership_card.save()
         return membership_card
+
 
 @frappe.whitelist()
 def create_customer(

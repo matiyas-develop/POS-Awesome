@@ -667,6 +667,9 @@ export default {
     evntBus.$on("update_customer", (data) => {
       this.customer = data;
     });
+    evntBus.$on("update_membershipcard", (data) => {
+      this.membershipcard = data;
+    });
   },
 
   mounted() {
