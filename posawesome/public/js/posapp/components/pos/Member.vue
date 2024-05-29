@@ -321,7 +321,7 @@ export default {
     }
 
     if (index === -1 || this.new_line) {
-      const item =  { item_name: "MEMBERSHIP", rate: 10,uom: "Nos" };
+      const item =  { item_name: "MEMBERSHIP"};
       if (item.has_serial_no && item.to_set_serial_no) {
          item.serial_no_selected = [];
          item.serial_no_selected.push(item.to_set_serial_no);
@@ -464,3 +464,4 @@ export default {
   },
 };
 </script>
+
