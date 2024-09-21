@@ -65,8 +65,9 @@
                   id="customer-autocomplete"
                   dense
                   clearable
+                  color="primary"
                   auto-select-first
-                  :label="frappe._('Customer') + ' *'"
+                  :label="frappe._('Customer')"
                   v-model="customer"
                   :items="customers"
                   item-text="customer_name"
@@ -74,8 +75,40 @@
                   background-color="white"
                   :no-data-text="__('Customer not found')"
                   hide-details
+                  :filter="customFilter"
                   :disabled="readonly"
-                ></v-autocomplete>
+                >
+                  <template v-slot:item="data">
+                    <template>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          class="primary--text subtitle-1"
+                          v-html="data.item.customer_name"
+                        ></v-list-item-title>
+                        <v-list-item-subtitle
+                          v-if="data.item.customer_name != data.item.name"
+                          v-html="`ID: ${data.item.name}`"
+                        ></v-list-item-subtitle>
+                        <v-list-item-subtitle
+                          v-if="data.item.tax_id"
+                          v-html="`TAX ID: ${data.item.tax_id}`"
+                        ></v-list-item-subtitle>
+                        <v-list-item-subtitle
+                          v-if="data.item.email_id"
+                          v-html="`Email: ${data.item.email_id}`"
+                        ></v-list-item-subtitle>
+                        <v-list-item-subtitle
+                          v-if="data.item.mobile_no"
+                          v-html="`Mobile No: ${data.item.mobile_no}`"
+                        ></v-list-item-subtitle>
+                        <v-list-item-subtitle
+                          v-if="data.item.primary_address"
+                          v-html="`Primary Address: ${data.item.primary_address}`"
+                        ></v-list-item-subtitle>
+                      </v-list-item-content>
+                    </template>
+                  </template>
+                </v-autocomplete>
               </v-col>
               <v-col cols="12">
                 <v-text-field
@@ -546,6 +579,22 @@ export default {
         });
       }
       this.$forceUpdate();
+    },
+    customFilter(item, queryText, itemText) {
+      const textOne = item.customer_name ? item.customer_name.toLowerCase() : '';
+      const textTwo = item.tax_id ? item.tax_id.toLowerCase() : '';
+      const textThree = item.email_id ? item.email_id.toLowerCase() : '';
+      const textFour = item.mobile_no ? item.mobile_no.toLowerCase() : '';
+      const textFifth = item.name.toLowerCase();
+      const searchText = queryText.toLowerCase();
+
+      return (
+        textOne.indexOf(searchText) > -1 ||
+        textTwo.indexOf(searchText) > -1 ||
+        textThree.indexOf(searchText) > -1 ||
+        textFour.indexOf(searchText) > -1 ||
+        textFifth.indexOf(searchText) > -1
+      );
     },
   },
 
