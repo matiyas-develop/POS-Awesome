@@ -41,10 +41,11 @@
                 <v-text-field
                   dense
                   color="primary"
-                  :label="frappe._('Mobile No')"
+                  :label="frappe._('Mobile No') + ' *'"
                   background-color="white"
                   hide-details
                   v-model="mobile_no"
+                  required
                 ></v-text-field>
               </v-col>
               <v-col cols="6">
@@ -282,6 +283,13 @@ export default {
       if (!this.group) {
         evntBus.$emit('show_mesage', {
           text: __('Customer group is required.'),
+          color: 'error',
+        });
+        return;
+      }
+      if (!this.mobile_no) {
+        evntBus.$emit('show_mesage', {
+          text: __('Mobile No. is required.'),
           color: 'error',
         });
         return;
