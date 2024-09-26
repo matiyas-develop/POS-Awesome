@@ -1953,7 +1953,8 @@ def check_and_set_membership_offers(items, data, customer, posting_date, total):
         final_discount_amt = total_discount_amt
 
         if final_discount_amt > data["max_discount_amount"]:
-            frappe.throw("The Discount amount is greater then Max Discount.")
+            #frappe.throw("The Discount amount is greater then Max Discount.")
+            final_discount_amt = data["max_discount_amount"]
 
         # if data["max_discount_amount"] < data.get('used_discount_amount'):
         #     frappe.throw(f"The membership card has reached its discount amount limit. This is {data['discount_amount']} amount.")
